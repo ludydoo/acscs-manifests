@@ -39,7 +39,6 @@ helm.sh/chart: {{ include "chart" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
 rhacs.redhat.com/instance-type: "{{ .Values.tenant.instanceType }}"
 rhacs.redhat.com/org-id: "{{ .Values.tenant.organizationId }}"
 rhacs.redhat.com/tenant: "{{ .Values.tenant.id }}"
