@@ -17,7 +17,7 @@ spec:
       connectionString: {{ .Values.centralDb.connectionString }}
       passwordSecret:
         name: "central-db-password"
-    declarativeConfig:
+    declarativeConfiguration:
       secrets:
         - name: cloud-service-sensible-declarative-configs
         - name: cloud-service-manual-declarative-configs
