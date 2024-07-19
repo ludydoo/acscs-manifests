@@ -99,17 +99,6 @@ spec:
                     requests:
                       storage: 10Gi
 
-    # SCANNER HORIZONTAL POD AUTOSCALER (HPA) ADJUSTMENT
-    # Since we adjust the scanner cpu request to be 30m, we want to autoscale when
-    # 4000% of that value is reached, or 1200m.
-
-    - apiVersion: autoscaling/v1
-      kind: HorizontalPodAutoscaler
-      name: scanner
-      patches:
-        - path: spec.targetCPUUtilizationPercentage
-          value: "4000"
-
     # REMOVAL OF NETWORK POLICIES
     # [ROX-22147, ROX-23550] In ACSCS we write NetworkPolicy in the
     # Fleetshard Sync's Tenant Helm chart, so we remove the ACS
