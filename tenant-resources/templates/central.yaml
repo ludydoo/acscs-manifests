@@ -6,12 +6,12 @@ metadata:
   labels: {{- include "labels" . | nindent 4 }}
   annotations: {{- include "centralAnnotations" . | nindent 4 }}
 spec:
+  tls:
+    additionalCAs: {{ .Values.centralDb.caCerts | toYaml | nindent 8 }}
   central:
     adminPasswordGenerationDisabled: true
     notifierSecretsEncryption:
       enabled: true
-    tls:
-      additionalCAs: {{ .Values.centralDb.caCerts | toYaml | nindent 8 }}
     db:
       isEnabled: Enabled
       connectionString: {{ .Values.centralDb.connectionString }}
