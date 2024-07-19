@@ -1,4 +1,5 @@
 reconciliationPaused: false
+version: ""
 tenant:
   name: ""
   organizationName: ""

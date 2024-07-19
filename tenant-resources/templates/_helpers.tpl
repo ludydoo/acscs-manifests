@@ -68,6 +68,14 @@ Central Annotations
 stackrox.io/pause-reconcile: {{ .Values.reconciliationPaused | quote }}
 {{- end }}
 
+{{/*
+Central Labels
+*/}}
+{{- define "centralLabels" -}}
+{{ include "labels" . }}
+rhacs.redhat.com/version-selector: {{ .Values.version | quote}}
+{{- end }}
+
 {{- define "localNetworkCidrRanges" -}}
 {{- tpl (.Files.Get "config/local-network-cidr-ranges.yaml.tpl") . -}}
 {{- end -}}

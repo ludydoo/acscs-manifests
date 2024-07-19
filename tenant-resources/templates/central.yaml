@@ -3,7 +3,7 @@ kind: Central
 metadata:
   name: "{{ .Values.tenant.name }}"
   namespace: "{{ .Release.Namespace }}"
-  labels: {{- include "labels" . | nindent 4 }}
+  labels: {{- include "centralLabels" . | nindent 4 }}
   annotations: {{- include "centralAnnotations" . | nindent 4 }}
 spec:
   tls:
