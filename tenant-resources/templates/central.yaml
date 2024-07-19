@@ -136,7 +136,7 @@ spec:
       patches:
         - path: spec
           value: '{}'
-    {{- if not .Values.tenant.internal }}
+    {{- if and (not .Values.tenant.internal) (.Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints") }}
     - apiVersion: networking.k8s.io/v1
       kind: NetworkPolicy
       name: central-monitoring-tls
