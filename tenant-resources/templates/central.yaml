@@ -52,7 +52,7 @@ spec:
       exposeEndpoint: Enabled
   monitoring:
     openshift:
-      enabled: {{ not .Values.tenant.internal }}
+      enabled: {{ and (not .Values.tenant.internal) (.Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints") }}
   overlays:
 
     # Remove central cpu limit
