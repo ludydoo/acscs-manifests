@@ -1,0 +1,155 @@
+metadata:
+  name: "{{ .Values.tenant.name }}"
+  namespace: "{{ .Release.Namespace }}"
+  labels: {{- include "labels" . | nindent 4 }}
+  annotations: {{- include "centralAnnotations" . | nindent 4 }}
+spec:
+  central:
+    adminPasswordGenerationDisabled: true
+    notifierSecretsEncryption:
+      enabled: true
+    tls:
+      additionalCAs: {{ .Values.centralDb.caCerts | toYaml | nindent 8 }}
+    db:
+      isEnabled: Enabled
+      connectionString: {{ .Values.centralDb.connectionString }}
+      passwordSecret:
+        name: "central-db-password"
+    declarativeConfig:
+      secrets:
+        - name: cloud-service-sensible-declarative-configs
+        - name: cloud-service-manual-declarative-configs
+    exposure:
+      route:
+        enabled: true
+    monitoring:
+      exposeEndpoint: Enabled
+    resources: {{ .Values.central.resources | toYaml | nindent 6 }}
+    telemetry:
+      enabled: true
+      storage:
+        endpoint: {{ .Values.telemetry.storage.endpoint }}
+        key: {{ .Values.telemetry.storage.key }}
+  customize:
+    annotations: {{- include "tenantAnnotations" . | nindent 6 }}
+    labels: {{ include "tenantLabels" . | nindent 6 }}
+  scanner:
+    analyzer:
+      resources: {{ .Values.scannerV2.resources | toYaml | nindent 8 }}
+      scaling:
+        autoScaling: Disabled
+        replicas: 1
+    scannerComponent: Enabled
+    db:
+      resources: {{ .Values.scannerV2Db.resources | toYaml | nindent 8 }}
+    monitoring:
+      exposeEndpoint: Enabled
+  scannerV4:
+    scannerComponent: Disabled
+    monitoring:
+      exposeEndpoint: Enabled
+  monitoring:
+    openshift:
+      enabled: {{ not .Values.tenant.internal }}
+  overlays:
+
+    # Remove central cpu limit
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: central
+      patches:
+        - path: spec.template.spec.containers[name:central].resources.limits.cpu
+          value: null
+
+    # Remove scanner cpu limit
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: scanner
+      patches:
+        - path: spec.template.spec.containers[name:scanner].resources.limits.cpu
+          value: null
+
+    # Remove scanner-db cpu limit
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: scanner-db
+      patches:
+        - path: spec.template.spec.containers[name:db].resources.limits.cpu
+          value: null
+        - path: spec.template.spec.initContainers[name:init-db].resources.limits.cpu
+          value: null
+
+    # Use ephemeral volume for scanner-db
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: scanner-db
+      patches:
+        - path: spec.template.spec.volumes[name:scanner-db-data]
+          value: |
+            name: scanner-db-data
+            ephemeral:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: gp3
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 10Gi
+
+    # SCANNER HORIZONTAL POD AUTOSCALER (HPA) ADJUSTMENT
+    # Since we adjust the scanner cpu request to be 30m, we want to autoscale when
+    # 4000% of that value is reached, or 1200m.
+
+    - apiVersion: autoscaling/v1
+      kind: HorizontalPodAutoscaler
+      name: scanner
+      patches:
+        - path: spec.targetCPUUtilizationPercentage
+          value: "4000"
+
+    # REMOVAL OF NETWORK POLICIES
+    # [ROX-22147, ROX-23550] In ACSCS we write NetworkPolicy in the
+    # Fleetshard Sync's Tenant Helm chart, so we remove the ACS
+    # Operator's NetworkPolicy's until code change to remove them
+    # is released.
+
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: allow-ext-to-central
+      patches:
+        - path: spec
+          value: '{}'
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: central-monitoring
+      patches:
+        - path: spec
+          value: '{}'
+
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: scanner
+      patches:
+        - path: spec
+          value: '{}'
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: scanner-db
+      patches:
+        - path: spec
+          value: '{}'
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: scanner-monitoring
+      patches:
+        - path: spec
+          value: '{}'
+    {{- if not .Values.tenant.internal }}
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: central-monitoring-tls
+      patches:
+        - path: spec
+          value: '{}'
+    {{ end }}

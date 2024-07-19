@@ -1,0 +1,23 @@
+{{ if .Values.central.vpa.enabled }}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: central-vpa
+  namespace: "{{ .Release.Namespace }}"
+  labels: {{- include "labels" . | nindent 4 }}
+  annotations: {{- include "annotations" . | nindent 4 }}
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: "Deployment"
+    name: "central"
+  {{- if .Values.central.vpa.updatePolicy }}
+  updatePolicy: {{ toYaml .Values.central.vpa.updatePolicy | nindent 4 }}
+  {{- end }}
+  {{- if .Values.central.vpa.resourcePolicy }}
+  resourcePolicy: {{ toYaml .Values.central.vpa.resourcePolicy | nindent 4 }}
+  {{- end }}
+  {{- if .Values.central.vpa.recommenders }}
+  recommenders: {{ toYaml .Values.central.vpa.recommenders | nindent 4 }}
+  {{- end }}
+{{ end}}
