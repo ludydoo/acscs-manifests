@@ -28,8 +28,8 @@ spec:
     telemetry:
       enabled: true
       storage:
-        endpoint: {{ .Values.telemetry.storage.endpoint }}
-        key: {{ .Values.telemetry.storage.key }}
+        endpoint: {{ ((.Values.telemetry).storage).endpoint }}
+        key: {{ ((.Values.telemetry).storage).key }}
   customize:
     annotations: {{- include "tenantAnnotations" . | nindent 6 }}
     labels: {{ include "tenantLabels" . | nindent 6 }}
