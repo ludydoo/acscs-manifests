@@ -1,3 +1,5 @@
+apiVersion: platform.stackrox.io
+kind: Central
 metadata:
   name: "{{ .Values.tenant.name }}"
   namespace: "{{ .Release.Namespace }}"
